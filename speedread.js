@@ -1,18 +1,18 @@
 // ==UserScript==
-// @name       SpeedRead
+// @name	   SpeedRead
 // @namespace  http://www.mesha.org/
-// @version    0.1
-// @description  Speed read
-// @match      http://*/*
-// @match      https://*/*
+// @version	   0.1
+// @description	 Speed read
+// @match	   http://*/*
+// @match	   https://*/*
 // @copyright  2014, Adam Mesha
 // ==/UserScript==
 
 (function (root, doc, onready) {
 	function addJquery(callback) {
 		var head = doc.head,
-		    script = doc.createElement('script'),
-		    src = '//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js';
+			script = doc.createElement('script'),
+			src = '//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js';
 		script.setAttribute('src', src);
 		script.onload = function () {
 			var jquery = jQuery.noConflict(true);
@@ -23,7 +23,7 @@
 
 	addJquery(onready);
 }(this, window.document, function ($, doc) {
-    'use strict';
+	'use strict';
 
 	var chunksize = 100, delayPerWord = 1000 * 60 / 750;
 
@@ -93,7 +93,7 @@
 
 
 	var popupClass = 'amesha-popup', popupOverlayClass = 'amesha-popup-overlay',
-	    popupContentClass = 'amesha-popup-content';
+		popupContentClass = 'amesha-popup-content';
 	var popup = $(el('div')).addClass(popupClass).appendTo('body').hide();
 	var popupContent = $(el('div')).addClass(popupContentClass).appendTo(popup);
 	var popupOverlay = $(el('div')).addClass(popupOverlayClass).appendTo('body').hide();
@@ -167,20 +167,20 @@
 
 		var nextChunk = function () {
 			if (idx >= words.length) { endRead(); return; }
-            showChunk();
+			showChunk();
 			timeoutId = setTimeout(nextChunk, delayPerWord * chunksize);
 		};
 
-        var showChunk = function () {
+		var showChunk = function () {
 			var end, slice;
 			end = idx + chunksize;
 			slice = words.slice(idx, end);
 			popupContent.text(slice.join(' '));
 			absoluteCenter(popupContent);
-	        if (!isPaused()) { // running
-		        setidx(end);
-	        }
-        };
+			if (!isPaused()) { // running
+				setidx(end);
+			}
+		};
 
 		var pauseRead = function () {
 			console.log( 'pausing' );
@@ -207,26 +207,26 @@
 			setidx(null);
 
 			var secs = Math.round((endTime - startTime) / 1000),
-			    secsPerWord = secs / maxidx,
-			    wordsPerSec = maxidx / secs;
+				secsPerWord = secs / maxidx,
+				wordsPerSec = maxidx / secs;
 			console.log( 'Read ' + maxidx + ' words in ' + Math.round((endTime - startTime) / 1000) + ' s (' + Math.round(60 * wordsPerSec) + ' word/min, ' + secsPerWord +' s/word).');
 		};
 
-        var backChunk = function () {
-            console.log( 'back' );
+		var backChunk = function () {
+			console.log( 'back' );
 
-            if (!isPaused()) { return; }
-            setidx(Math.max(0, idx - chunksize));
-            showChunk();
-        };
+			if (!isPaused()) { return; }
+			setidx(Math.max(0, idx - chunksize));
+			showChunk();
+		};
 
-        var forwardChunk = function () {
-            console.log( 'forward' );
+		var forwardChunk = function () {
+			console.log( 'forward' );
 
-            if (!isPaused()) { return; }
-            setidx(Math.min(words.length, idx + chunksize));
-            showChunk();
-        };
+			if (!isPaused()) { return; }
+			setidx(Math.min(words.length, idx + chunksize));
+			showChunk();
+		};
 
 		$(doc).on('keyup', function (e) {
 			if (e.which === esckey) {
@@ -238,12 +238,12 @@
 					resumeRead();
 				}
 			} else if (isPaused() && isRunning()) { // paused but running
-                if (e.which === leftarrow) {
-                    backChunk();
-                } else if (e.which === rightarrow) {
-                    forwardChunk();
-                }
-            }
+				if (e.which === leftarrow) {
+					backChunk();
+				} else if (e.which === rightarrow) {
+					forwardChunk();
+				}
+			}
 		});
 
 		setidx(0);
@@ -253,7 +253,7 @@
 
 	function absoluteCenter(element) {
 		var halfTheParent = element.parent().height() / 2,
-		    margin = Math.min(halfTheParent, element.height() / 2);
+			margin = Math.min(halfTheParent, element.height() / 2);
 		element.css('margin-top',  -margin + 'px');
 	}
 
