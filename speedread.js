@@ -324,12 +324,19 @@
         };
 
 		var nextChunk = function () {
-			if (idx >= words.length) { recurseAgain(-1); return; }
+			setidx(idx == null ? 0 : nextidx().newidx);
+			playChunks();
+		};
+
+		var playChunks = function () {
 			var next = nextidx(), i = next.newidx, delay = next.delay;
 			clearTimeout(timeoutId); // in case we're skipping forward
                                      // or backward
-			timeoutId = setTimeout(nextChunk, delay);
 			showChunk(i);
+			timeoutId = (i >= words.length) ?
+				setTimeout(function () { recurseAgain(-1); }, delay) :
+				setTimeout(nextChunk, delay);
+
 		};
 
 		var showChunk = function (end) {
@@ -338,9 +345,6 @@
 			slice = words.slice(idx, end);
 			popupContent.text(slice.join(' '));
 			absoluteCenter(popupContent);
-			if (!isPaused()) {
-				setidx(end);
-			}
 		};
 
 		var pauseRead = function () {
@@ -387,7 +391,7 @@
 			// if (!isPaused()) { return; }
 			// setidx(Math.max(0, idx - chunksize));
 			decidx();
-			isPaused() ? showChunk() : nextChunk();
+			isPaused() ? showChunk() : playChunks();
 		};
 
 		var forwardChunk = function () {
@@ -396,7 +400,7 @@
 			// if (!isPaused()) { return; }
 			// setidx(Math.min(words.length, idx + chunksize));
 			incidx();
-			isPaused() ? showChunk() : nextChunk();
+			isPaused() ? showChunk() : playChunks();
 		};
 
 		$(doc).on('keyup.speedread', function (e) {
@@ -421,7 +425,6 @@
 			}
 		});
 
-		setidx(0);
 		showPopup();
 		nextChunk();
 	}
