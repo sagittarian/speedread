@@ -35,6 +35,25 @@
 
 	var el = function () { return doc.createElement.apply(doc, arguments); };
 
+
+	function walkDom(root, acc, func) {
+		acc = func(acc, root);
+		root.children().each(function (i, child) {
+			var $child = $(child);
+			acc = walkDom($child, acc, func);
+		});
+		return acc;
+	}
+
+	function highestZIndex() {
+		return +walkDom($('body'), null, function (acc, element) {
+			var zIndex = element.css('z-index');
+			if (zIndex === 'auto') { return acc; }
+			return (acc == null || +zIndex > acc) ? zIndex : acc;
+		}) || 0;
+	}
+
+
     // selecting an element in the DOM
 	var selecting = false, className = 'amesha-selected-element', elementList = [];
 
@@ -108,12 +127,14 @@
 			ev.stopImmediatePropagation();
 		});
 
+	var camelCaseToDashed = function (identifier) {		return identifier.replace(/([a-z])([A-Z][a-z])/g, '$1-$2').toLowerCase();	};
 
 	var popupClass = 'amesha-popup', popupOverlayClass = 'amesha-popup-overlay',
 		popupContentClass = 'amesha-popup-content';
+	var popupOverlay = $(el('div')).addClass(popupOverlayClass).appendTo('body').hide();
 	var popup = $(el('div')).addClass(popupClass).appendTo('body').hide();
 	var popupContent = $(el('div')).addClass(popupContentClass).appendTo(popup);
-	var popupOverlay = $(el('div')).addClass(popupOverlayClass).appendTo('body').hide();
+	var zIndex = highestZIndex() + 1;
 	var stylesheetRules = {
 		'.amesha-popup': {
 			position: 'fixed',
@@ -122,11 +143,11 @@
 			width: '90%',
 			height: '90%',
 			overflow: 'auto',
-			'background-color': 'white',
+			backgroundColor: 'white',
 			border: 'thick solid green',
-			'border-radius': '5px',
-			'z-index': 20001,
-			'text-align': 'center'
+			borderRadius: '5px',
+			zIndex: zIndex + 1,
+			textAlign: 'center'
 		},
 		'.amesha-popup .amesha-popup-content': {
 			position: 'absolute',
@@ -134,22 +155,29 @@
 			width: 'calc(100% - 50px)',
 			height: 'auto',
 			left: 0,
-			'text-align': 'center',
-			'font-size': '48px',
-			'line-height': 1.5,
-			'border-radius': '5px',
+			textAlign: 'center',
+			fontSize: '48px',
+			color: 'black',
+			textDecoration: 'none',
+			fontWeight: 'normal',
+			fontStyle: 'normal',
+			// "Times New Roman", Times, serif
+			// Georgia, serif
+			// Arial, Helvetica, sans-serif
+			fontFamily: '"Times New Roman", Times, serif',
+			lineHeight: 1.5,
+			borderRadius: '5px',
 			padding: '25px',
-			'overflow': 'auto'
+			overflow: 'auto'
 		},
-
 		'.amesha-popup-overlay': {
 			position: 'fixed',
-			'background-color': 'rgba(0, 0, 0, 0.3)',
+			backgroundColor: 'rgba(0, 0, 0, 0.3)',
 			top: 0,
 			left: 0,
 			width: '100%',
 			height: '100%',
-			'z-index': 20000
+			zIndex: zIndex
 		}
 	};
 	var popupStylesheet = makeCss(stylesheetRules).appendTo('head');
@@ -316,7 +344,7 @@
 	function makeCssRule(rule) {
 		var result = [];
 		for (var prop in rule) {
-			result.push(prop + ': ' + rule[prop] + ';');
+			result.push(camelCaseToDashed(prop) + ': ' + rule[prop] + ';');
 		}
 		return result.join(' ');
 	}
