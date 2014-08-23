@@ -95,7 +95,7 @@
 
 	// utils
 	var uparrow = 38, downarrow = 40, enterkey = 13, esckey = 27,
-	    leftarrow = 37, rightarrow = 39;
+	    leftarrow = 37, rightarrow = 39, pluskey = 187, minuskey = 189;
 	var phi = (Math.sqrt(5) + 1) / 2;
 	function walkDom(root, acc, func) {
 		acc = func(acc, root);
@@ -182,7 +182,10 @@
 				pruneChildren(result, function (element) {
 					return element.is('script, style');
 				});
-				speedRead(result.text());
+				speedRead(result.text(), {
+					// start one level faster than the target
+					targetWPM: defaultSettings.targetWPM * phi
+				});
 			} else if (ev.which === downarrow) {
 				selectChild();
 			}
@@ -321,7 +324,7 @@
         };
 
 		var nextChunk = function () {
-			if (idx >= words.length) { recurseSlower(); return; }
+			if (idx >= words.length) { recurseAgain(-1); return; }
             var next = nextidx(), i = next.newidx, delay = next.delay;
 			timeoutId = setTimeout(nextChunk, delay);
 			showChunk(i);
@@ -371,9 +374,9 @@
 
 		};
 
-		var recurseSlower = function () {
+		var recurseAgain = function (nextLevel) {
 			endRead();
-			settings.targetWPM /= phi;
+			settings.targetWPM *= Math.pow(phi, nextLevel);
 			speedRead(text, settings);
 		};
 
@@ -398,10 +401,12 @@
 		$(doc).on('keyup.speedread', function (e) {
 			if (e.which === esckey) {
 				endRead();
+			} else if (e.which === pluskey && e.altKey) {
+				recurseAgain(1);
+			} else if (e.which === minuskey && e.altKey) {
+				recurseAgain(-1);
 			} else if (e.which === enterkey) {
-				if (e.ctrlKey) {
-					recurseSlower();
-				} else if (timeoutId != null) {
+				if (timeoutId != null) {
 					pauseRead();
 				} else {
 					resumeRead();
