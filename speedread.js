@@ -149,6 +149,9 @@
 			zIndex: zIndex + 1,
 			textAlign: 'center'
 		},
+		'.amesha-popup.paused': {
+			border: 'thick solid red'
+		},
 		'.amesha-popup .amesha-popup-content': {
 			position: 'absolute',
 			top: '50%',
@@ -269,6 +272,7 @@
 			console.log( 'pausing' );
 
 			if (isPaused()) { return; }
+			popup.addClass('paused');
 			timeoutId = clearTimeout(timeoutId);
 		};
 
@@ -276,6 +280,7 @@
 			console.log( 'resuming' );
 
 			if (!isRunning()) { return; }
+			popup.removeClass('paused');
 			timeoutId = setTimeout(nextChunk, nextidx().delay);
 		};
 
