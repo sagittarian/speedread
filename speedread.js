@@ -325,7 +325,9 @@
 
 		var nextChunk = function () {
 			if (idx >= words.length) { recurseAgain(-1); return; }
-            var next = nextidx(), i = next.newidx, delay = next.delay;
+			var next = nextidx(), i = next.newidx, delay = next.delay;
+			clearTimeout(timeoutId); // in case we're skipping forward
+                                     // or backward
 			timeoutId = setTimeout(nextChunk, delay);
 			showChunk(i);
 		};
@@ -363,8 +365,7 @@
 
 			$(doc).off('keyup.speedread');
 			hidePopup();
-			clearTimeout(timeoutId);
-			timeoutId = null;
+			timeoutId = clearTimeout(timeoutId);
 			setidx(null);
 
 			var secs = Math.round((endTime - startTime) / 1000),
@@ -383,19 +384,19 @@
 		var backChunk = function () {
 			console.log( 'back' );
 
-			if (!isPaused()) { return; }
+			// if (!isPaused()) { return; }
 			// setidx(Math.max(0, idx - chunksize));
 			decidx();
-			showChunk();
+			isPaused() ? showChunk() : nextChunk();
 		};
 
 		var forwardChunk = function () {
 			console.log( 'forward' );
 
-			if (!isPaused()) { return; }
+			// if (!isPaused()) { return; }
 			// setidx(Math.min(words.length, idx + chunksize));
 			incidx();
-			showChunk();
+			isPaused() ? showChunk() : nextChunk();
 		};
 
 		$(doc).on('keyup.speedread', function (e) {
@@ -411,7 +412,7 @@
 				} else {
 					resumeRead();
 				}
-			} else if (isPaused() && isRunning()) {
+			} else if (isRunning()) {
 				if (e.which === leftarrow) {
 					backChunk();
 				} else if (e.which === rightarrow) {
