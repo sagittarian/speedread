@@ -94,8 +94,9 @@
 	var color = 'rgba(255, 255, 0, 0.3)'; // translucent yellow
 
 	// utils
-	var uparrow = 38, downarrow = 40, enterkey = 13, esckey = 27, leftarrow = 37, rightarrow = 39;
-//var el = function () { return doc.createElement.apply(doc, arguments); };
+	var uparrow = 38, downarrow = 40, enterkey = 13, esckey = 27,
+	    leftarrow = 37, rightarrow = 39;
+	var phi = (Math.sqrt(5) + 1) / 2;
 	function walkDom(root, acc, func) {
 		acc = func(acc, root);
 		root.children().each(function (i, child) {
@@ -263,6 +264,7 @@
 		    wordsPerChunk = settings.wordsPerChunk,
 		    targetWPM = settings.targetWPM,
 		    charsPerChunk = charsPerWord * wordsPerChunk;
+		console.log( 'starting, targetWPM is', targetWPM );
 
 		var words = text.split(/\s+/g), idx, maxidx, startTime = Date.now(), timeoutId;
 
@@ -319,7 +321,7 @@
         };
 
 		var nextChunk = function () {
-			if (idx >= words.length) { endRead(); return; }
+			if (idx >= words.length) { recurseSlower(); return; }
             var next = nextidx(), i = next.newidx, delay = next.delay;
 			timeoutId = setTimeout(nextChunk, delay);
 			showChunk(i);
@@ -352,10 +354,11 @@
 			timeoutId = setTimeout(nextChunk, nextidx().delay);
 		};
 
-		var endRead = function () {
+		var endRead = function (recurse) {
 			console.log( 'ending' );
 			var endTime = Date.now();
 
+			$(doc).off('keyup.speedread');
 			hidePopup();
 			clearTimeout(timeoutId);
 			timeoutId = null;
@@ -365,6 +368,13 @@
 				secsPerWord = secs / maxidx,
 				wordsPerSec = maxidx / secs;
 			console.log( 'Read ' + maxidx + ' words in ' + Math.round((endTime - startTime) / 1000) + ' s (' + Math.round(60 * wordsPerSec) + ' word/min, ' + secsPerWord +' s/word).');
+
+		};
+
+		var recurseSlower = function () {
+			endRead();
+			settings.targetWPM /= phi;
+			speedRead(text, settings);
 		};
 
 		var backChunk = function () {
@@ -385,16 +395,18 @@
 			showChunk();
 		};
 
-		$(doc).on('keyup', function (e) {
+		$(doc).on('keyup.speedread', function (e) {
 			if (e.which === esckey) {
 				endRead();
 			} else if (e.which === enterkey) {
-				if (timeoutId != null) {
+				if (e.ctrlKey) {
+					recurseSlower();
+				} else if (timeoutId != null) {
 					pauseRead();
 				} else {
 					resumeRead();
 				}
-			} else if (isPaused() && isRunning()) { // paused but running
+			} else if (isPaused() && isRunning()) {
 				if (e.which === leftarrow) {
 					backChunk();
 				} else if (e.which === rightarrow) {
