@@ -85,17 +85,17 @@
 	'use strict';
 
 	// config
-    var defaultSettings = {
-	    charsPerWord: 5,
-	    wordsPerChunk: 30,
-	    targetWPM: 600
-    };
+	var defaultSettings = {
+		charsPerWord: 5,
+		wordsPerChunk: 30,
+		targetWPM: 600
+	};
 
 	var color = 'rgba(255, 255, 0, 0.3)'; // translucent yellow
 
 	// utils
 	var uparrow = 38, downarrow = 40, enterkey = 13, esckey = 27,
-	    leftarrow = 37, rightarrow = 39, pluskey = 187, minuskey = 189;
+		leftarrow = 37, rightarrow = 39, pluskey = 187, minuskey = 189;
 	var phi = (Math.sqrt(5) + 1) / 2;
 	function walkDom(root, acc, func) {
 		acc = func(acc, root);
@@ -115,7 +115,7 @@
 	}
 
 
-    // selecting an element in the DOM
+	// selecting an element in the DOM
 	var selecting = false, className = 'amesha-selected-element', elementList = [];
 
 	var stylesheet = $.el('style').text();
@@ -198,8 +198,8 @@
 	};
 
 	var popupOverlay = $('body').el('.amesha-popup-overlay').hide(),
-	    popup = $('body').el('.amesha-popup').hide(),
-	    popupContent = popup.el('.amesha-popup-content');
+		popup = $('body').el('.amesha-popup').hide(),
+		popupContent = popup.el('.amesha-popup-content');
 	var zIndex = highestZIndex() + 1;
 	var stylesheetRules = {
 		'.amesha-popup, .amesha-popup *, .amesha-popup-overlay': {
@@ -278,15 +278,15 @@
 	function speedRead(text, options) {
 		var settings = $.extend({}, defaultSettings, options || {});
 		var charsPerWord = settings.charsPerWord,
-		    wordsPerChunk = settings.wordsPerChunk,
-		    targetWPM = settings.targetWPM,
-		    charsPerChunk = charsPerWord * wordsPerChunk;
+			wordsPerChunk = settings.wordsPerChunk,
+			targetWPM = settings.targetWPM,
+			charsPerChunk = charsPerWord * wordsPerChunk;
 		console.log( 'starting, targetWPM is', targetWPM );
 
 		var level = Math.round(
 			Math.log(targetWPM / defaultSettings.targetWPM) / Math.log(phi)),
-		    sign = level === 0 ? level : Math.abs(level) / level,
-		    extraClass = ['slow', '', 'fast'][sign+1] + ' level_' + level;
+			sign = level === 0 ? level : Math.abs(level) / level,
+			extraClass = ['slow', '', 'fast'][sign+1] + ' level_' + level;
 		console.log( 'level is', level );
 
 		// var extraPopupClasses = [];
@@ -307,42 +307,42 @@
 			}
 		};
 
-        var incidx = function () {
-            var next = nextidx(1);
-            setidx(next.newidx);
-        };
+		var incidx = function () {
+			var next = nextidx(1);
+			setidx(next.newidx);
+		};
 
-        var decidx = function () {
-	        var prev = nextidx(-1);
-	        setidx(prev.newidx);
-        };
+		var decidx = function () {
+			var prev = nextidx(-1);
+			setidx(prev.newidx);
+		};
 
 		var cachedResults = {
 			'1': {}, '-1': {}
-        };
-        var nextidx = function (direction) {
-            direction = direction || 1;
-            if (!cachedResults[direction][idx]) {
-	            var charsSeen = 0, i = idx, endCondition = direction > 0 ?
-		                function () {
-			                return i >= words.length;
-		                } : function () {
-			                return i <= 0;
-		                };
-                while (!endCondition() && charsSeen < charsPerChunk) {
-	                i += direction;
-	                var curWord = words[direction > 0 ? i - 1 : i];
-	                charsSeen += curWord.length + 1; // + 1 for the space
-                }
-                cachedResults[direction][idx] = {
-                    newidx: i,
-                    chars: charsSeen,
-                    delay: 60000 * charsSeen / (targetWPM * charsPerWord)
-                };
-            }
+		};
+		var nextidx = function (direction) {
+			direction = direction || 1;
+			if (!cachedResults[direction][idx]) {
+				var charsSeen = 0, i = idx, endCondition = direction > 0 ?
+						function () {
+							return i >= words.length;
+						} : function () {
+							return i <= 0;
+						};
+				while (!endCondition() && charsSeen < charsPerChunk) {
+					i += direction;
+					var curWord = words[direction > 0 ? i - 1 : i];
+					charsSeen += curWord.length + 1; // + 1 for the space
+				}
+				cachedResults[direction][idx] = {
+					newidx: i,
+					chars: charsSeen,
+					delay: 60000 * charsSeen / (targetWPM * charsPerWord)
+				};
+			}
 
-            return cachedResults[direction][idx];
-        };
+			return cachedResults[direction][idx];
+		};
 
 		var nextChunk = function () {
 			setidx(idx == null ? 0 : nextidx().newidx);
@@ -352,7 +352,7 @@
 		var playChunks = function () {
 			var next = nextidx(), i = next.newidx, delay = next.delay;
 			clearTimeout(timeoutId); // in case we're skipping forward
-                                     // or backward
+									 // or backward
 			showChunk(i);
 			timeoutId = (i >= words.length) ?
 				setTimeout(function () { recurseAgain(-1); }, delay) :
@@ -362,7 +362,7 @@
 
 		var showChunk = function (end) {
 			var slice;
-            end = end || nextidx().newidx;
+			end = end || nextidx().newidx;
 			slice = words.slice(idx, end);
 			popupContent.text(slice.join(' '));
 			absoluteCenter(popupContent);
