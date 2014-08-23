@@ -206,7 +206,8 @@
 		                };
                 while (!endCondition() && charsSeen < charsPerChunk) {
 	                i += direction;
-	                charsSeen += words[i].length + 1; // + 1 for the space
+	                var curWord = words[direction > 0 ? i - 1 : i];
+	                charsSeen += curWord.length + 1; // + 1 for the space
                 }
                 cachedResults[direction][idx] = {
                     newidx: i,
