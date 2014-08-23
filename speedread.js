@@ -25,15 +25,18 @@
 }(this, window.document, function ($, doc) {
 	'use strict';
 
-	var chunksize = 100, delayPerWord = 1000 * 60 / 750;
+    var charsPerWord = 5, wordsPerChunk = 30, targetWPM = 750,
+        charsPerChunk = wordsPerChunk * charsPerWord;
 
 	var color = 'rgba(255, 255, 0, 0.3)'; // translucent yellow
-	var selecting = false;
+
 	var uparrow = 38, downarrow = 40, enterkey = 13, esckey = 27, leftarrow = 37, rightarrow = 39;
-	var className = 'amesha-selected-element';
-	var elementList = [];
+
 
 	var el = function () { return doc.createElement.apply(doc, arguments); };
+
+    // selecting an element in the DOM
+	var selecting = false, className = 'amesha-selected-element', elementList = [];
 
 	var stylesheet = $(el('style')).text('.' + className +' {background-color: ' + color + '}');
 	$('head').append(stylesheet);
@@ -165,19 +168,56 @@
 			}
 		};
 
+        var incidx = function () {
+            var next = nextidx(1);
+            setidx(next.newidx);
+        };
+
+        var decidx = function () {
+	        var prev = nextidx(-1);
+	        setidx(prev.newidx);
+        };
+
+		var cachedResults = {
+			'1': {}, '-1': {}
+        };
+        var nextidx = function (direction) {
+            direction = direction || 1;
+            if (!cachedResults[direction][idx]) {
+	            var charsSeen = 0, i = idx, endCondition = direction > 0 ?
+		                function () {
+			                return i >= words.length;
+		                } : function () {
+			                return i <= 0;
+		                };
+                while (!endCondition() && charsSeen < charsPerChunk) {
+	                i += direction;
+	                charsSeen += words[i].length + 1; // + 1 for the space
+                }
+                cachedResults[direction][idx] = {
+                    newidx: i,
+                    chars: charsSeen,
+                    delay: 60000 * charsSeen / (targetWPM * charsPerWord)
+                };
+            }
+
+            return cachedResults[direction][idx];
+        };
+
 		var nextChunk = function () {
 			if (idx >= words.length) { endRead(); return; }
-			showChunk();
-			timeoutId = setTimeout(nextChunk, delayPerWord * chunksize);
+            var next = nextidx(), i = next.newidx, delay = next.delay;
+			timeoutId = setTimeout(nextChunk, delay);
+			showChunk(i);
 		};
 
-		var showChunk = function () {
-			var end, slice;
-			end = idx + chunksize;
+		var showChunk = function (end) {
+			var slice;
+            end = end || nextidx().newidx;
 			slice = words.slice(idx, end);
 			popupContent.text(slice.join(' '));
 			absoluteCenter(popupContent);
-			if (!isPaused()) { // running
+			if (!isPaused()) {
 				setidx(end);
 			}
 		};
@@ -186,15 +226,14 @@
 			console.log( 'pausing' );
 
 			if (isPaused()) { return; }
-			clearTimeout(timeoutId);
-			timeoutId = null;
+			timeoutId = clearTimeout(timeoutId);
 		};
 
 		var resumeRead = function () {
 			console.log( 'resuming' );
 
 			if (!isRunning()) { return; }
-			timeoutId = setTimeout(nextChunk, delayPerWord * chunksize);
+			timeoutId = setTimeout(nextChunk, nextidx().delay);
 		};
 
 		var endRead = function () {
@@ -216,7 +255,8 @@
 			console.log( 'back' );
 
 			if (!isPaused()) { return; }
-			setidx(Math.max(0, idx - chunksize));
+			// setidx(Math.max(0, idx - chunksize));
+			decidx();
 			showChunk();
 		};
 
@@ -224,7 +264,8 @@
 			console.log( 'forward' );
 
 			if (!isPaused()) { return; }
-			setidx(Math.min(words.length, idx + chunksize));
+			// setidx(Math.min(words.length, idx + chunksize));
+			incidx();
 			showChunk();
 		};
 
@@ -248,7 +289,7 @@
 
 		setidx(0);
 		showPopup();
-		timeoutId = setTimeout(nextChunk, 0);
+		nextChunk();
 	}
 
 	function absoluteCenter(element) {
