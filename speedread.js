@@ -71,6 +71,17 @@
 		selectElement(curElement.parent());
 	}
 
+	function pruneChildren(element, test) {
+		element.children().each(function (i, child) {
+			var $child = $(child);
+			if (test($child)) {
+				$child.remove();
+			} else {
+				pruneChildren($child, test);
+			}
+		});
+	}
+
 	$(doc)
 		.on('click', function (ev) {
 			if (!ev.shiftKey || !ev.ctrlKey) { return; }
@@ -85,7 +96,10 @@
 			if (ev.which === uparrow) {
 				selectParent();
 			} else if (ev.which === enterkey) {
-				var result = resetState();
+				var result = resetState().clone();
+				pruneChildren(result, function (element) {
+					return element.is('script, style');
+				});
 				speedRead(result.text());
 			} else if (ev.which === downarrow) {
 				selectChild();
