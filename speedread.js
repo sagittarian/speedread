@@ -202,6 +202,9 @@
 	    popupContent = popup.el('.amesha-popup-content');
 	var zIndex = highestZIndex() + 1;
 	var stylesheetRules = {
+		'.amesha-popup, .amesha-popup *, .amesha-popup-overlay': {
+			boxSizing: 'border-box'
+		},
 		'.amesha-popup': {
 			position: 'fixed',
 			top: '5%',
@@ -210,20 +213,26 @@
 			height: '90%',
 			overflow: 'auto',
 			backgroundColor: 'white',
-			border: 'thick solid green',
+			border: '25px solid blue',
 			borderRadius: '5px',
 			zIndex: zIndex + 1,
 			textAlign: 'center'
 		},
+		'.amesha-popup.fast': {
+			borderColor: 'green'
+		},
+		'.amesha-popup.slow': {
+			borderColor: 'yellow'
+		},
 		'.amesha-popup.paused': {
-			border: 'thick solid red'
+			borderColor: 'red'
 		},
 		'.amesha-popup .amesha-popup-content': {
 			position: 'absolute',
 			top: '50%',
-			width: 'calc(100% - 50px)',
 			height: 'auto',
 			left: 0,
+			right: 0,
 			textAlign: 'center',
 			fontSize: '48px',
 			color: 'black',
@@ -251,9 +260,14 @@
 	};
 	var popupStylesheet = makeCss(stylesheetRules).appendTo('head');
 
+	function resetPopupClass() {
+		popup
+			.removeClass().addClass('amesha-popup');
+	}
+
 	function showPopup (text) {
-		popup.text(text);
-		popup.show();
+		resetPopupClass();
+		popup.text(text).show();
 		popupOverlay.show();
 	}
 	function hidePopup () {
@@ -269,6 +283,13 @@
 		    charsPerChunk = charsPerWord * wordsPerChunk;
 		console.log( 'starting, targetWPM is', targetWPM );
 
+		var level = Math.round(
+			Math.log(targetWPM / defaultSettings.targetWPM) / Math.log(phi)),
+		    sign = level === 0 ? level : Math.abs(level) / level,
+		    extraClass = ['slow', '', 'fast'][sign+1] + ' level_' + level;
+		console.log( 'level is', level );
+
+		// var extraPopupClasses = [];
 		var words = text.split(/\s+/g), idx, maxidx, startTime = Date.now(), timeoutId;
 
 		var isPaused = function () {
@@ -426,6 +447,7 @@
 		});
 
 		showPopup();
+		popup.addClass(extraClass);
 		nextChunk();
 	}
 
