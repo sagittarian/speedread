@@ -307,12 +307,19 @@
 	}
 
 	function speedRead(text, options) {
+		var words = text.split(/\s+/g),
+		    normText = words.join(' '),
+		    idx, maxidx, startTime = Date.now(), timeoutId;
 		var settings = $.extend({}, defaultSettings, options || {});
 		var charsPerWord = settings.charsPerWord,
 			wordsPerChunk = settings.wordsPerChunk,
 			targetWPM = settings.targetWPM,
 			charsPerChunk = charsPerWord * wordsPerChunk;
 		console.log( 'starting, targetWPM is', targetWPM );
+		console.log( (normText.length / charsPerWord) +
+		             ' (normalized) words in the selection.' );
+		var expectedMinutes = Math.round(normText.length / (targetWPM * charsPerWord) * 10) / 10;
+		console.log( 'Expected to take ' + expectedMinutes + ' minutes.' );
 
 		var level = Math.round(
 			Math.log(targetWPM / defaultSettings.targetWPM) / Math.log(phi)),
@@ -321,7 +328,7 @@
 		console.log( 'level is', level );
 
 		// var extraPopupClasses = [];
-		var words = text.split(/\s+/g), idx, maxidx, startTime = Date.now(), timeoutId;
+
 
 		var isPaused = function () {
 			return timeoutId == null;
