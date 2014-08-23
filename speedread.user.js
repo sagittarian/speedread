@@ -114,6 +114,27 @@
 		}) || 0;
 	}
 
+	// you know doubleclicking?  well this is double pressing.
+	var lastWhich, lastWhichWhen, threshold = 500;
+	$(doc).on('keyup', function (event) {
+		var now = Date.now();
+		if (lastWhich && event.which === lastWhich && now - lastWhichWhen < threshold) {
+			$(event.target).trigger('doublepress', {
+				which: event.which,
+				interval: now - lastWhichWhen
+			});
+			lastWhich = null;
+			lastWhichWhen = null;
+		} else {
+			lastWhich = event.which;
+			lastWhichWhen = now;
+		}
+	});
+
+	$(doc).on('doublepress', function (e, params) {
+		console.log('got a doublepress, which = ', params.which);
+	});
+
 
 	// selecting an element in the DOM
 	var selecting = false, className = 'amesha-selected-element', elementList = [];
