@@ -9,6 +9,64 @@
 // ==/UserScript==
 
 (function (root, doc, onready) {
+	// jquery-el
+	var jqel = function ($) {
+		var attrletters, el, tagletters;
+		tagletters = 'a-zA-Z0-9';
+		attrletters = tagletters + '_-';
+		el = $.el = function(tag, attrs) {
+			var $el, attr, classes, cls, id, rest, sigil, signs, split, val, _i, _j, _len, _len1;
+			if (tag == null) {
+				tag = '';
+			}
+			if (attrs == null) {
+				attrs = {};
+			}
+			classes = [];
+			split = tag.match(RegExp("^([" + tagletters + "]*)(([#.][" + attrletters + "]+)*)$"));
+			tag = split[1] ? split[1] : 'div';
+			if (split[2] != null) {
+				signs = split[2].match(RegExp("([#.][" + attrletters + "]+)", "g"));
+				if (signs != null) {
+					for (_i = 0, _len = signs.length; _i < _len; _i++) {
+						attr = signs[_i];
+						sigil = attr.slice(0, 1);
+						rest = attr.slice(1);
+						if (sigil === '#') {
+							id = rest;
+						} else {
+							classes.push(rest);
+						}
+					}
+				}
+			}
+			$el = $(document.createElement(tag));
+			for (_j = 0, _len1 = classes.length; _j < _len1; _j++) {
+				cls = classes[_j];
+				$el.addClass(cls);
+			}
+			if (id != null) {
+				$el.attr('id', id);
+			}
+			for (attr in attrs) {
+				val = attrs[attr];
+				if (attr === 'text' || attr === 'html' || attr === 'val') {
+					$el[attr](val);
+				} else {
+					$el.attr(attr, val);
+				}
+			}
+			return $el;
+		};
+		$.fn.el = function(tag, attrs) {
+			return el(tag, attrs).appendTo(this);
+		};
+		$.fn.appendEl = function(tag, attrs) {
+			return this.append(el(tag, attrs));
+		};
+		return el;
+	};
+
 	function addJquery(callback) {
 		var head = doc.head,
 			script = doc.createElement('script'),
@@ -16,6 +74,7 @@
 		script.setAttribute('src', src);
 		script.onload = function () {
 			var jquery = jQuery.noConflict(true);
+			jqel(jquery);
 			typeof callback === 'function' && callback(jquery, doc);
 		};
 		head.appendChild(script);
@@ -25,17 +84,15 @@
 }(this, window.document, function ($, doc) {
 	'use strict';
 
+	// config
     var charsPerWord = 5, wordsPerChunk = 30, targetWPM = 750,
         charsPerChunk = wordsPerChunk * charsPerWord;
 
 	var color = 'rgba(255, 255, 0, 0.3)'; // translucent yellow
 
+	// utils
 	var uparrow = 38, downarrow = 40, enterkey = 13, esckey = 27, leftarrow = 37, rightarrow = 39;
-
-
-	var el = function () { return doc.createElement.apply(doc, arguments); };
-
-
+//var el = function () { return doc.createElement.apply(doc, arguments); };
 	function walkDom(root, acc, func) {
 		acc = func(acc, root);
 		root.children().each(function (i, child) {
@@ -57,8 +114,10 @@
     // selecting an element in the DOM
 	var selecting = false, className = 'amesha-selected-element', elementList = [];
 
-	var stylesheet = $(el('style')).text('.' + className +' {background-color: ' + color + '}');
-	$('head').append(stylesheet);
+	var stylesheet = $.el('style').text();
+	$('head').appendEl('style', {
+		text: '.' + className +' {background-color: ' + color + '}'
+	});
 
 	function resetState() {
 		selecting = false;
@@ -127,13 +186,13 @@
 			ev.stopImmediatePropagation();
 		});
 
-	var camelCaseToDashed = function (identifier) {		return identifier.replace(/([a-z])([A-Z][a-z])/g, '$1-$2').toLowerCase();	};
+	var camelCaseToDashed = function (identifier) {
+		return identifier.replace(/([a-z])([A-Z][a-z])/g, '$1-$2').toLowerCase();
+	};
 
-	var popupClass = 'amesha-popup', popupOverlayClass = 'amesha-popup-overlay',
-		popupContentClass = 'amesha-popup-content';
-	var popupOverlay = $(el('div')).addClass(popupOverlayClass).appendTo('body').hide();
-	var popup = $(el('div')).addClass(popupClass).appendTo('body').hide();
-	var popupContent = $(el('div')).addClass(popupContentClass).appendTo(popup);
+	var popupOverlay = $('body').el('.amesha-popup-overlay').hide(),
+	    popup = $('body').el('.amesha-popup').hide(),
+	    popupContent = popup.el('.amesha-popup-content');
 	var zIndex = highestZIndex() + 1;
 	var stylesheetRules = {
 		'.amesha-popup': {
@@ -356,11 +415,10 @@
 
 	function makeCss(cssObj) {
 		// return a jquery object
-		var style = $(el('style'));
 		var text = [];
 		for (var selector in cssObj) {
 			text.push(selector + '{' + makeCssRule(cssObj[selector]) + '}');
 		}
-		return style.text(text.join(' '));
+		return $.el('style', {text: text.join(' ')});
 	}
 }));
