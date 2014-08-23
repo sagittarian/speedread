@@ -85,8 +85,11 @@
 	'use strict';
 
 	// config
-    var charsPerWord = 5, wordsPerChunk = 30, targetWPM = 750,
-        charsPerChunk = wordsPerChunk * charsPerWord;
+    var defaultSettings = {
+	    charsPerWord: 5,
+	    wordsPerChunk: 30,
+	    targetWPM: 600
+    };
 
 	var color = 'rgba(255, 255, 0, 0.3)'; // translucent yellow
 
@@ -254,7 +257,13 @@
 		popupOverlay.hide();
 	}
 
-	function speedRead(text) {
+	function speedRead(text, options) {
+		var settings = $.extend({}, defaultSettings, options || {});
+		var charsPerWord = settings.charsPerWord,
+		    wordsPerChunk = settings.wordsPerChunk,
+		    targetWPM = settings.targetWPM,
+		    charsPerChunk = charsPerWord * wordsPerChunk;
+
 		var words = text.split(/\s+/g), idx, maxidx, startTime = Date.now(), timeoutId;
 
 		var isPaused = function () {
