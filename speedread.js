@@ -88,7 +88,7 @@
 	var defaultSettings = {
 		charsPerWord: 5,
 		wordsPerChunk: 30,
-		targetWPM: 600
+		targetWPM: 450
 	};
 
 	var color = 'rgba(255, 255, 0, 0.3)'; // translucent yellow
@@ -199,11 +199,22 @@
 
 	var popupOverlay = $('body').el('.amesha-popup-overlay').hide(),
 		popup = $('body').el('.amesha-popup').hide(),
-		popupContent = popup.el('.amesha-popup-content');
+	    popupContent = popup.el('.amesha-popup-content'),
+	    progressIndicator = popup.el('.amesha-progress-indicator');
 	var zIndex = highestZIndex() + 1;
 	var stylesheetRules = {
 		'.amesha-popup, .amesha-popup *, .amesha-popup-overlay': {
 			boxSizing: 'border-box'
+		},
+		'.amesha-progress-indicator': {
+			position: 'absolute',
+			bottom: 0,
+			left: 0,
+			width: '50px',
+			height: '10px',
+			backgroundColor: 'black',
+			borderRadius: '5px',
+			transition: 'all 0.5s linear 0'
 		},
 		'.amesha-popup': {
 			position: 'fixed',
@@ -214,7 +225,7 @@
 			overflow: 'auto',
 			backgroundColor: 'white',
 			border: '25px solid blue',
-			borderRadius: '5px',
+			borderRadius: '10px',
 			zIndex: zIndex + 1,
 			textAlign: 'center'
 		},
@@ -261,8 +272,7 @@
 	var popupStylesheet = makeCss(stylesheetRules).appendTo('head');
 
 	function resetPopupClass() {
-		popup
-			.removeClass().addClass('amesha-popup');
+		popup.removeClass().addClass('amesha-popup');
 	}
 
 	function showPopup (text) {
@@ -305,6 +315,11 @@
 			if (maxidx == null || idx > maxidx) {
 				maxidx = idx;
 			}
+			var contentWidth = popupContent.width(),
+			    indicatorWidth = progressIndicator.width(),
+			    progressOffset = idx/words.length *
+				    (contentWidth - indicatorWidth);
+			progressIndicator.css('left', progressOffset + 'px');
 		};
 
 		var incidx = function () {
