@@ -95,8 +95,24 @@
 	var color = 'rgba(255, 255, 0, 0.3)'; // translucent yellow
 
 	// utils
-	var uparrow = 38, downarrow = 40, enterkey = 13, esckey = 27,
-		leftarrow = 37, rightarrow = 39, pluskey = 187, minuskey = 189;
+	var
+	commonKeys = {
+		uparrow: 38,
+		downarrow: 40,
+		leftarrow: 37,
+		rightarrow: 39,
+		enterkey: 13,
+		esckey: 27,
+	},
+	mozKeys = $.extend({
+		pluskey: 52,
+		minuskey: 173,
+	}, commonKeys),
+	chromeKeys = $.extend({
+		pluskey: 187,
+		minuskey: 189,
+	}, commonKeys),
+	keys = navigator.userAgent.indexOf('Chrome') !== -1 ? chromeKeys : mozKeys;
 	var phi = (Math.sqrt(5) + 1) / 2;
 	function walkDom(root, acc, func) {
 		acc = func(acc, root);
@@ -254,7 +270,7 @@ console.log('which is ', event.which);
 		.on('keyup', function (ev) {
 			if (!selecting) {
 				var content;
-				if (ev.which === enterkey && ev.ctrlKey &&
+				if (ev.which === keys.enterkey && ev.ctrlKey &&
 				    typeof thisSite.selectContent === 'function') {
 					content = thisSite.selectContent();
 					if (!content || !content.length) { return; }
@@ -263,9 +279,9 @@ console.log('which is ', event.which);
 				}
 				return;
 			}
-			if (ev.which === uparrow) {
+			if (ev.which === keys.uparrow) {
 				selectParent();
-			} else if (ev.which === enterkey) {
+			} else if (ev.which === keys.enterkey) {
 				var result = resetState().clone(),
 				    pruneTree = thisSite.pruneTree;
 				pruneChildren(result, function (element) {
@@ -275,7 +291,7 @@ console.log('which is ', event.which);
 					// start one level faster than the target
 					targetWPM: defaultSettings.targetWPM * phi
 				});
-			} else if (ev.which === downarrow) {
+			} else if (ev.which === keys.downarrow) {
 				selectChild();
 			}
 			ev.preventDefault();
@@ -542,22 +558,22 @@ console.log('which is ', event.which);
 		};
 
 		var eventHandler = function (e) {
-			if (e.which === esckey) {
+			if (e.which === keys.esckey) {
 				endRead();
-			} else if (e.which === pluskey && e.altKey) {
+			} else if (e.which === keys.pluskey && e.altKey) {
 				recurseAgain(1);
-			} else if (e.which === minuskey && e.altKey) {
+			} else if (e.which === keys.minuskey && e.altKey) {
 				recurseAgain(-1);
-			} else if (e.which === enterkey) {
+			} else if (e.which === keys.enterkey) {
 				if (timeoutId != null) {
 					pauseRead();
 				} else {
 					resumeRead();
 				}
 			} else if (isRunning()) {
-				if (e.which === leftarrow) {
+				if (e.which === keys.leftarrow) {
 					backChunk();
-				} else if (e.which === rightarrow) {
+				} else if (e.which === keys.rightarrow) {
 					forwardChunk();
 				}
 			}
