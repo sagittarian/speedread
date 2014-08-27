@@ -228,7 +228,7 @@ console.log('which is ', event.which);
 			return;
 		}
 		var curElement = elementList[elementList.length - 1];
-		selectElement(curElement.parent());
+		selectElement(thisSite.getParent(curElement));
 	}
 
 	function pruneChildren(element, test) {
@@ -244,7 +244,7 @@ console.log('which is ', event.which);
 
 	$(doc)
 		.on('click', function (ev) {
-			if (!ev.shiftKey || !ev.ctrlKey) { return; }
+			if (!ev.ctrlKey) { return; }
 			selecting = true;
 			var target = $(ev.target);
 			selectElement(target);
@@ -252,13 +252,24 @@ console.log('which is ', event.which);
 			ev.stopImmediatePropagation();
 		})
 		.on('keyup', function (ev) {
-			if (!selecting) { return; }
+			if (!selecting) {
+				var content;
+				if (ev.which === enterkey && ev.ctrlKey &&
+				    typeof thisSite.selectContent === 'function') {
+					content = thisSite.selectContent();
+					if (!content || !content.length) { return; }
+					selecting = true;
+					selectElement(content);
+				}
+				return;
+			}
 			if (ev.which === uparrow) {
 				selectParent();
 			} else if (ev.which === enterkey) {
-				var result = resetState().clone();
+				var result = resetState().clone(),
+				    pruneTree = thisSite.pruneTree;
 				pruneChildren(result, function (element) {
-					return element.is('script, style');
+					return element.is('script, style') || pruneTree(element);
 				});
 				speedRead(result.text(), {
 					// start one level faster than the target
@@ -276,11 +287,14 @@ console.log('which is ', event.which);
 	};
 
 	var popupOverlay = $('body').el('.amesha-popup-overlay').hide(),
-		popup = $('body').el('.amesha-popup').hide(),
-	    popupContent = popup.el('.amesha-popup-content'),
-	    progressIndicator = popup.el('.amesha-progress-indicator');
+		popup = $('body').el('.amesha-popup', {tabindex: -1}).hide(),
+		popupContent = popup.el('.amesha-popup-content'),
+		progressIndicator = popup.el('.amesha-progress-indicator');
 	var zIndex = highestZIndex() + 1;
 	var stylesheetRules = {
+		'body.amesha-open-popup': {
+			overflow: 'hidden'
+		},
 		'.amesha-popup, .amesha-popup *, .amesha-popup-overlay': {
 			boxSizing: 'border-box'
 		},
@@ -292,7 +306,7 @@ console.log('which is ', event.which);
 			height: '10px',
 			backgroundColor: 'black',
 			borderRadius: '5px',
-			transition: 'all 0.5s linear 0'
+			transition: 'all 0.5s linear'
 		},
 		'.amesha-popup': {
 			position: 'fixed',
@@ -305,7 +319,8 @@ console.log('which is ', event.which);
 			border: '25px solid blue',
 			borderRadius: '10px',
 			zIndex: zIndex + 1,
-			textAlign: 'center'
+			textAlign: 'center',
+			boxShadow: '3px 3px 8px 8px black, -3px -3px 8px 8px black'
 		},
 		'.amesha-popup.fast': {
 			borderColor: 'green'
@@ -355,18 +370,20 @@ console.log('which is ', event.which);
 
 	function showPopup (text) {
 		resetPopupClass();
-		popup.text(text).show();
+		popup.text(text).show().focus();
 		popupOverlay.show();
+		$('body').addClass('amesha-open-popup');
 	}
 	function hidePopup () {
 		popup.hide();
 		popupOverlay.hide();
+		$('body').removeClass('amesha-open-popup');
 	}
 
 	function speedRead(text, options) {
 		var words = text.split(/\s+/g),
-		    normText = words.join(' '),
-		    idx, maxidx, startTime = Date.now(), timeoutId;
+			normText = words.join(' '),
+			idx, maxidx, startTime = Date.now(), timeoutId;
 		var settings = $.extend({}, defaultSettings, options || {});
 		var charsPerWord = settings.charsPerWord,
 			wordsPerChunk = settings.wordsPerChunk,
@@ -374,7 +391,7 @@ console.log('which is ', event.which);
 			charsPerChunk = charsPerWord * wordsPerChunk;
 		console.log( 'starting, targetWPM is', targetWPM );
 		console.log( (normText.length / charsPerWord) +
-		             ' (normalized) words in the selection.' );
+					 ' (normalized) words in the selection.' );
 		var expectedMinutes = Math.round(normText.length / (targetWPM * charsPerWord) * 10) / 10;
 		console.log( 'Expected to take ' + expectedMinutes + ' minutes.' );
 
@@ -401,9 +418,9 @@ console.log('which is ', event.which);
 				maxidx = idx;
 			}
 			var contentWidth = popupContent.width(),
-			    indicatorWidth = progressIndicator.width(),
-			    progressOffset = idx/words.length *
-				    (contentWidth - indicatorWidth);
+				indicatorWidth = progressIndicator.width(),
+				progressOffset = idx/words.length *
+					(contentWidth - indicatorWidth);
 			progressIndicator.css('left', progressOffset + 'px');
 		};
 
@@ -524,7 +541,7 @@ console.log('which is ', event.which);
 			isPaused() ? showChunk() : playChunks();
 		};
 
-		$(doc).on('keyup.speedread', function (e) {
+		var eventHandler = function (e) {
 			if (e.which === esckey) {
 				endRead();
 			} else if (e.which === pluskey && e.altKey) {
@@ -544,7 +561,9 @@ console.log('which is ', event.which);
 					forwardChunk();
 				}
 			}
-		});
+		};
+
+		$(doc).on('keyup.speedread', eventHandler);
 
 		showPopup();
 		popup.addClass(extraClass);
@@ -573,4 +592,5 @@ console.log('which is ', event.which);
 		}
 		return $.el('style', {text: text.join(' ')});
 	}
+
 }));
