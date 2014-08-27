@@ -115,11 +115,12 @@
 		}) || 0;
 	}
 
-	// you know doubleclicking?  well this is double pressing.
+	// you know doubleclicking?	 well this is double pressing.
 	var lastWhich, lastWhichWhen, threshold = 500;
 	$(doc).on('keyup', function (event) {
 		var now = Date.now();
 		if (lastWhich && event.which === lastWhich && now - lastWhichWhen < threshold) {
+console.log('which is ', event.which);
 			$(event.target).trigger('doublepress', {
 				which: event.which,
 				interval: now - lastWhichWhen
@@ -133,14 +134,69 @@
 	});
 
 	$(doc).on('doublepress', function (e, params) {
-		console.log('got a doublepress, which = ', params.which);
+		console.log('got a doublepress, which = ', params.which, 'interval = ', params.interval);
 	});
 
 
 	// selecting an element in the DOM
 	var selecting = false, className = 'amesha-selected-element', elementList = [];
 
-	var stylesheet = $.el('style').text();
+	// some site-specific logic stuff
+	var getParentSelectorList = function () {
+		var selectorList = arguments;
+		return function (node) {
+			var parent;
+			$.each(selectorList, function (i, selector) {
+				var result = node.parents(selector);
+				if (result.length > 0) {
+					parent = result;
+					return false;
+				}
+				return null;
+			});
+			return parent || node.parent();
+		};
+	};
+
+	var siteSpecific = {
+		'quora\.com': {
+			getParent: getParentSelectorList('.Answer', '.AnswerPagedList'),
+			selectContent: function () {
+				return $('.AnswerPagedList').first();
+			},
+			pruneTree: (function () {
+				var selectors = ['.AnswerHeader', '.AnswerFooter',
+				                 '.ActionBar', '.suggested_edits',
+				                 '.PromoteAnswer', '.action_bar_comments',
+				                 '.QuestionTopicsEditor', '.action_button',
+				                 '.view_topics'
+				                ].join(', ');
+				return function (node) {
+					return node.is(selectors);
+				};
+			}())
+		},
+		'wikipedia\.org': {
+			selectContent: function () {
+				return $('#bodyContent');
+			}
+		}
+	};
+
+	var thisSite = {
+		getParent: function (node) {
+			return node.parent();
+		},
+		pruneTree: function () { return false; }
+	};
+
+	$.each(siteSpecific, function (regex, config) {
+		if (document.location.href.match(new RegExp(regex, 'i'))) {
+			thisSite = $.extend({}, thisSite, config);
+			return false;
+		}
+	});
+
 	$('head').appendEl('style', {
 		text: '.' + className +' {background-color: ' + color + '}'
 	});
