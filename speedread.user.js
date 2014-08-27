@@ -1,12 +1,12 @@
 // ==UserScript==
-// @name         SpeedRead
-// @namespace    http://www.mesha.org/
-// @version      0.1
-// @description  Speed read
-// @match        http://*/*
-// @match        https://*/*
-// @grant        none
-// @copyright    2014, Adam Mesha
+// @name		 SpeedRead
+// @namespace	 http://www.mesha.org/
+// @version		 0.1
+// @description	 Speed read
+// @match		 http://*/*
+// @match		 https://*/*
+// @grant		 none
+// @copyright	 2014, Adam Mesha
 // ==/UserScript==
 
 (function (root, doc, onready) {
@@ -136,7 +136,6 @@
 	$(doc).on('keyup', function (event) {
 		var now = Date.now();
 		if (lastWhich && event.which === lastWhich && now - lastWhichWhen < threshold) {
-console.log('which is ', event.which);
 			$(event.target).trigger('doublepress', {
 				which: event.which,
 				interval: now - lastWhichWhen
@@ -182,11 +181,11 @@ console.log('which is ', event.which);
 			},
 			pruneTree: (function () {
 				var selectors = ['.AnswerHeader', '.AnswerFooter',
-				                 '.ActionBar', '.suggested_edits',
-				                 '.PromoteAnswer', '.action_bar_comments',
-				                 '.QuestionTopicsEditor', '.action_button',
-				                 '.view_topics'
-				                ].join(', ');
+								 '.ActionBar', '.suggested_edits',
+								 '.PromoteAnswer', '.action_bar_comments',
+								 '.QuestionTopicsEditor', '.action_button',
+								 '.view_topics'
+								].join(', ');
 				return function (node) {
 					return node.is(selectors);
 				};
@@ -271,7 +270,7 @@ console.log('which is ', event.which);
 			if (!selecting) {
 				var content;
 				if (ev.which === keys.enterkey && ev.ctrlKey &&
-				    typeof thisSite.selectContent === 'function') {
+					typeof thisSite.selectContent === 'function') {
 					content = thisSite.selectContent();
 					if (!content || !content.length) { return; }
 					selecting = true;
@@ -283,7 +282,7 @@ console.log('which is ', event.which);
 				selectParent();
 			} else if (ev.which === keys.enterkey) {
 				var result = resetState().clone(),
-				    pruneTree = thisSite.pruneTree;
+					pruneTree = thisSite.pruneTree;
 				pruneChildren(result, function (element) {
 					return element.is('script, style') || pruneTree(element);
 				});
@@ -521,7 +520,7 @@ console.log('which is ', event.which);
 			console.log( 'ending' );
 			var endTime = Date.now();
 
-			$(doc).off('keyup.speedread');
+			$(doc).off('.speedread');
 			hidePopup();
 			timeoutId = clearTimeout(timeoutId);
 			setidx(null);
@@ -579,7 +578,15 @@ console.log('which is ', event.which);
 			}
 		};
 
-		$(doc).on('keyup.speedread', eventHandler);
+		$(doc).on('keyup.speedread', eventHandler)
+			.on('doublepress.speedread', function (event, params) {
+				if (params.which === keys.pluskey) {
+					recurseAgain(1);
+				} else if (params.which === keys.minuskey) {
+					recurseAgain(-1);
+				}
+			});
+
 
 		showPopup();
 		popup.addClass(extraClass);
