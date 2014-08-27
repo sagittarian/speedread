@@ -1,11 +1,12 @@
 // ==UserScript==
-// @name	   SpeedRead
-// @namespace  http://www.mesha.org/
-// @version	   0.1
-// @description	 Speed read
-// @match	   http://*/*
-// @match	   https://*/*
-// @copyright  2014, Adam Mesha
+// @name         SpeedRead
+// @namespace    http://www.mesha.org/
+// @version      0.1
+// @description  Speed read
+// @match        http://*/*
+// @match        https://*/*
+// @grant        none
+// @copyright    2014, Adam Mesha
 // ==/UserScript==
 
 (function (root, doc, onready) {
