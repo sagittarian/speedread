@@ -88,8 +88,8 @@
 	// config
 	var defaultSettings = {
 		charsPerWord: 5,
-		wordsPerChunk: 30,
-		targetWPM: 450
+		wordsPerChunk: 15,
+		targetWPM: 350
 	};
 
 	var color = 'rgba(255, 255, 0, 0.3)'; // translucent yellow
