@@ -92,6 +92,11 @@
 		targetWPM: 350
 	};
 
+	// we want to automatically start increasing the targetWPM
+	var startDate = new Date(2014, 9, 1), // Wed Oct 01 2014 00:00:00 GMT+0300 (IDT)
+	    daysSince = Math.max(0, (Date.now() - startDate) / (1000*60*60*24)) |0;
+	defaultSettings.targetWPM += daysSince;
+
 	var color = 'rgba(255, 255, 0, 0.3)'; // translucent yellow
 
 	// utils
