@@ -432,22 +432,29 @@
 		var words = text.split(/\s+/g),
 			normText = words.join(' '),
 			idx, maxidx, startTime = Date.now(), timeoutId;
-		var settings = $.extend({}, defaultSettings, options || {});
-		var charsPerWord = settings.charsPerWord,
-			wordsPerChunk = settings.wordsPerChunk,
-			targetWPM = settings.targetWPM,
+		var settings = $.extend({}, defaultSettings);
+		var charsPerWord, wordsPerChun, targetWPM, charsPerChunk;
+		var level, sign, extraClass;
+
+		var initSettings = function (opts) {
+			settings = $.extend(settings, opts || {});
+			charsPerWord = settings.charsPerWord;
+			wordsPerChunk = settings.wordsPerChunk;
+			targetWPM = settings.targetWPM;
 			charsPerChunk = charsPerWord * wordsPerChunk;
-		console.log( 'starting, targetWPM is', targetWPM );
+			level = Math.round(
+				Math.log(targetWPM / defaultSettings.targetWPM) / Math.log(phi));
+			sign = level === 0 ? level : Math.abs(level) / level;
+			extraClass = ['slow', '', 'fast'][sign+1] + ' level_' + level;
+			console.log( 'targetWPM is', targetWPM );
+			console.log( 'Level is', level );
+		};
+		initSettings(options);
+
 		console.log( (normText.length / charsPerWord) +
 					 ' (normalized) words in the selection.' );
 		var expectedMinutes = Math.round(normText.length / (targetWPM * charsPerWord) * 10) / 10;
 		console.log( 'Expected to take ' + expectedMinutes + ' minutes.' );
-
-		var level = Math.round(
-			Math.log(targetWPM / defaultSettings.targetWPM) / Math.log(phi)),
-			sign = level === 0 ? level : Math.abs(level) / level,
-			extraClass = ['slow', '', 'fast'][sign+1] + ' level_' + level;
-		console.log( 'level is', level );
 
 		// var extraPopupClasses = [];
 
@@ -482,9 +489,14 @@
 			setidx(prev.newidx);
 		};
 
-		var cachedResults = {
-			'1': {}, '-1': {}
+		var cachedResults;
+		var resetCache = function () {
+			cachedResults = {
+				'1': {}, '-1': {}
+			};
 		};
+		resetCache();
+
 		var nextidx = function (direction) {
 			direction = direction || 1;
 			if (!cachedResults[direction][idx]) {
@@ -571,6 +583,15 @@
 			speedRead(text, settings);
 		};
 
+		var changeSpeed = function (levelDiff) {
+			settings.targetWPM *= Math.pow(phi, levelDiff);
+			popup.removeClass(extraClass);
+			initSettings();
+			popup.addClass(extraClass);
+			resetCache();
+			// XXX refactor so that we don't have to do so much here
+		};
+
 		var backChunk = function () {
 			console.log( 'back' );
 
@@ -614,9 +635,9 @@
 		$(doc).on('keyup.speedread', eventHandler)
 			.on('doublepress.speedread', function (event, params) {
 				if (params.which === keys.pluskey) {
-					recurseAgain(1);
+					changeSpeed(1);
 				} else if (params.which === keys.minuskey) {
-					recurseAgain(-1);
+					changeSpeed(-1);
 				}
 			});
 
