@@ -262,6 +262,37 @@
 		});
 	}
 
+
+	// function getText(node) {
+	// 	var result = node.clone(),
+	// 	    pruneTree = thisSite.pruneTree;
+	// 	pruneChildren(result, function (element) {
+	// 		return element.is('script, style') || pruneTree(element);
+	// 	});
+	// 	return result.text();
+	// }
+
+	function getText(node, test) {
+		// fancier way of extracting text from a DOM node
+		test = test || function () { return false; };
+		var textNodeType = 3;
+		if (node.css('display') === 'none' || node.css('visibility') === 'hidden') { return ''; }
+		var result = [],
+		    isDisplayBlock = node.css('display').match(/^(block|table.*)$/i);
+		isDisplayBlock && result.push(' ');
+		node.contents().each(function (i, child) {
+			var $child = $(child);
+			if (child.nodeType === textNodeType) {
+				result.push($child.text().trim());
+			} else if (!$child.is('script, style') && !test($child)) {
+				result.push(getText($child));
+			}
+		});
+		isDisplayBlock && result.push(' ');
+		var text = result.join('');
+		return text.trim().replace(/\s\s+/g, ' ');
+	}
+
 	$(doc)
 		.on('click', function (ev) {
 			if (!ev.ctrlKey) { return; }
@@ -286,12 +317,9 @@
 			if (ev.which === keys.uparrow) {
 				selectParent();
 			} else if (ev.which === keys.enterkey) {
-				var result = resetState().clone(),
-					pruneTree = thisSite.pruneTree;
-				pruneChildren(result, function (element) {
-					return element.is('script, style') || pruneTree(element);
-				});
-				speedRead(result.text(), {
+				var node = resetState(),
+				    text = getText(node, thisSite.pruneTree);
+				speedRead(text, {
 					// start one level faster than the target
 					targetWPM: defaultSettings.targetWPM * phi
 				});
