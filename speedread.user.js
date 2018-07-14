@@ -275,21 +275,25 @@
 	function getText(node, test) {
 		// fancier way of extracting text from a DOM node
 		test = test || function () { return false; };
-		var textNodeType = 3;
+		var textNodeType = 3, commentNodeType = 8;
 		if (node.css('display') === 'none' || node.css('visibility') === 'hidden') { return ''; }
 		var result = [],
 		    isDisplayBlock = node.css('display').match(/^(block|table.*)$/i);
 		isDisplayBlock && result.push(' ');
 		node.contents().each(function (i, child) {
 			var $child = $(child);
-			if (child.nodeType === textNodeType) {
+            if (child.nodeType === commentNodeType) {
+                return;
+            }
+			else if (child.nodeType === textNodeType) {
 				result.push($child.text().trim());
-			} else if (!$child.is('script, style') && !test($child)) {
+			}
+            else if (!$child.is('script, style') && !test($child)) {
 				result.push(getText($child));
 			}
 		});
 		isDisplayBlock && result.push(' ');
-		var text = result.join('');
+		var text = result.join(' ');
 		return text.trim().replace(/\s\s+/g, ' ');
 	}
 
@@ -433,7 +437,7 @@
 			normText = words.join(' '),
 			idx, maxidx, startTime = Date.now(), timeoutId;
 		var settings = $.extend({}, defaultSettings);
-		var charsPerWord, wordsPerChun, targetWPM, charsPerChunk;
+		var charsPerWord, wordsPerChunk, targetWPM, charsPerChunk;
 		var level, sign, extraClass;
 
 		var initSettings = function (opts) {
